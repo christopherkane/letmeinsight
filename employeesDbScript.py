@@ -1,39 +1,43 @@
-from flask import Flask
-from flask import request
+from flask import Flask, g, request, jsonify
 import sqlite3 as sql
 app = Flask(__name__)
+app.debug = True
 
 
-@app.route('/howmany', methods = ['GET'])
+@app.route('/howmany')
 def howmany():
-	con = sql.connect("employees.db")
-	con.row_factory = sql.Row
+    con = sql.connect("employees.db")
 
-	cur = con.cursor();
-	cur.execute(COUNT(ALL,"select name from employees where inOffice = true")).fetchall()
+    cur = con.cursor()
+    cur.execute("SELECT count(name) FROM employees WHERE inOffice = true")
+    data = cur.fetchall()
 
-	con.commit()
-	con.close()
+    con.commit()
+    con.close()
+    return jsonify(data)
 
-@app.route('/list', methods = ['GET'])
+
+@app.route('/list')
 def list():
-	con = sql.connect("employees.db")
-   	con.row_factory = sql.Row
+    con = sql.connect("employees.db")
 
-   	cur = con.cursor()
-   	cur.execute("select * from employees")
+    cur = con.cursor()
+    cur.execute("SELECT * FROM employees")
+    data = cur.fetchall()
 
-	con.commit()
-	con.close()
+    con.commit()
+    con.close()
+    return jsonify(data)
 
-@app.route('/isinoffice', methods = ['GET'])
-def isinoffice():
-	user = request.args.get('user')
-	con = sql.connect("employees.db")
-   	con.row_factory = sql.Row
+@app.route('/isinoffice/<user>/')
+def isinoffice(user=None):
+    con = sql.connect("employees.db")
+    user = request.args.get('user')
 
-   	cur = con.cursor()
-	cur.execute("select id from employees where name = ?", [user])
-	
-	con.commit()
-	con.close()
+    cur = con.cursor()
+    cur.execute("SELECT inOffice FROM employees WHERE email = ?", [user])
+    data = cur.fetchall()
+
+    con.commit()
+    con.close()
+    return jsonify(data)

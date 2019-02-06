@@ -4,7 +4,7 @@ app = Flask(__name__)
 app.debug = True
 
 
-@app.route('/howmany')
+@app.route('/howmany', methods=["GET"])
 def howmany():
     con = sql.connect("employees.db")
 
@@ -17,7 +17,7 @@ def howmany():
     return jsonify(data)
 
 
-@app.route('/list')
+@app.route('/list', methods=["GET"])
 def list():
     con = sql.connect("employees.db")
 
@@ -29,13 +29,13 @@ def list():
     con.close()
     return jsonify(data)
 
-@app.route('/isinoffice/<user>/')
-def isinoffice(user=None):
+@app.route('/isinoffice', methods=["GET"])
+def isinoffice():
     con = sql.connect("employees.db")
-    user = request.args.get('user')
+    employee_name = request.args.get('name')
 
     cur = con.cursor()
-    cur.execute("SELECT inOffice FROM employees WHERE email = ?", [user])
+    cur.execute("SELECT inOffice FROM employees WHERE name = ?", [employee_name])
     data = cur.fetchall()
 
     con.commit()

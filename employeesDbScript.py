@@ -4,7 +4,7 @@ import sqlite3 as sql
 app = Flask(__name__)
 
 
-@app.route('/howmany',methods = ['POST', 'GET'])
+@app.route('/howmany', methods = ['GET'])
 def howmany():
 	con = sql.connect("employees.db")
 	con.row_factory = sql.Row
@@ -15,7 +15,7 @@ def howmany():
 	con.commit()
 	con.close()
 
-@app.route('/list',methods = ['POST', 'GET'])
+@app.route('/list', methods = ['GET'])
 def list():
 	con = sql.connect("employees.db")
    	con.row_factory = sql.Row
@@ -26,7 +26,7 @@ def list():
 	con.commit()
 	con.close()
 
-@app.route('/isinoffice',methods = ['POST', 'GET'])
+@app.route('/isinoffice', methods = ['GET'])
 def isinoffice():
 	user = request.args.get('user')
 	con = sql.connect("employees.db")

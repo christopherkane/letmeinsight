@@ -1,0 +1,11 @@
+{
+  "name": "stream",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.16.4",
+    "mktemp": "^0.4.0",
+    "rimraf": "^2.6.3"
+  }
+}

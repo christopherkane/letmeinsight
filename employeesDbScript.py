@@ -9,7 +9,7 @@ def howmany():
     con = sql.connect("employees.db")
 
     cur = con.cursor()
-    cur.execute("SELECT count(name) FROM employees WHERE inOffice = true")
+    cur.execute("SELECT count(name) FROM employees WHERE inOffice = 1")
     data = cur.fetchall()
 
     con.commit()

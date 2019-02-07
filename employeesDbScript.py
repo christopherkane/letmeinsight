@@ -4,7 +4,7 @@ app = Flask(__name__)
 app.debug = True
 
 
-@app.route('/howmany', methods=["GET"])
+@app.route('/howmany', methods=["POST","GET"])
 def howmany():
     con = sql.connect("employees.db")
 
@@ -17,7 +17,7 @@ def howmany():
     return jsonify(data)
 
 
-@app.route('/list', methods=["GET"])
+@app.route('/list', methods=["POST","GET"])
 def list():
     con = sql.connect("employees.db")
 
@@ -29,7 +29,7 @@ def list():
     con.close()
     return jsonify(data)
 
-@app.route('/isinoffice', methods=["GET"])
+@app.route('/isinoffice', methods=["POST","GET"])
 def isinoffice():
     con = sql.connect("employees.db")
     employee_name = request.args.get('name')

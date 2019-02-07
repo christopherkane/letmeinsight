@@ -23,11 +23,19 @@ def list():
 
     cur = con.cursor()
     cur.execute("SELECT * FROM employees WHERE inOffice = 1")
-    data = cur.fetchall()
+
+    response = []
+
+    for row in cur.fetchall():
+        response.append({ "text": row[1] })
 
     con.commit()
     con.close()
-    return jsonify(data)
+
+    return jsonify({
+		"text": "The following people are in the office",
+		"attachments": response
+	})
 
 @app.route('/isinoffice', methods=["POST","GET"])
 def isinoffice():

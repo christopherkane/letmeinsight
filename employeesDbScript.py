@@ -10,11 +10,12 @@ def howmany():
 
     cur = con.cursor()
     cur.execute("SELECT count(name) FROM employees WHERE inOffice = 1")
-    data = cur.fetchall()
+    number = cur.fetchone()[0]
 
     con.commit()
     con.close()
-    return jsonify(data)
+
+    return "The number of people in the office is: " + str(number)
 
 
 @app.route('/list', methods=["POST","GET"])
@@ -37,15 +38,28 @@ def list():
 		"attachments": response
 	})
 
-@app.route('/isinoffice', methods=["POST","GET"])
+@app.route('/isinoffice', methods=["POST"])
 def isinoffice():
-    con = sql.connect("employees.db")
-    employee_name = request.args.get('name')
+    command = request.form['command']
+    employee_name = request.form['text']
 
+    con = sql.connect("employees.db")
     cur = con.cursor()
     cur.execute("SELECT inOffice FROM employees WHERE name = ?", [employee_name])
-    data = cur.fetchall()
+    row = cur.fetchone()
+    response = ""
+
+    if row is None:
+        response = ":thinking_face: Who is " + employee_name + "? Check the P45s issued"
+    else:
+        inOffice = row[0]
+        emoji = ":ok_hand:" if inOffice else ":man-shrugging:"
+
+        response = emoji + " " + employee_name + " is" + (" not" if not inOffice else "") + " in the office"
 
     con.commit()
     con.close()
-    return jsonify(data)
+
+    return jsonify({
+		"text": response
+	})

@@ -24,7 +24,7 @@ database = 'employees.db'
 conn = sqlite3.connect(database)
 print('Opened database successfully');
 
-conn.execute('CREATE TABLE employees (id INTEGER PRIMARY KEY, name TEXT, email TEXT, inOffice BOOLEAN DEFAULT false)')
+conn.execute('CREATE TABLE employees (id INTEGER PRIMARY KEY, name TEXT, email TEXT, inOffice BOOLEAN DEFAULT 0)')
 print('Table created successfully');
 
 for user in USERS:

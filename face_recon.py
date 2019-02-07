@@ -1,7 +1,9 @@
 import os
+import random
 import face_recognition
 import cv2
 import sqlite3
+import subprocess
 
 def main():
 
@@ -12,7 +14,7 @@ def main():
 
     # Get a reference to webcam #0 (the default one)
     video_capture_0 = cv2.VideoCapture(0)
-    video_capture_1 = cv2.VideoCapture(1)
+    video_capture_1 = cv2.VideoCapture(2)
     
     known_face_names = list()
     known_face_encodings = list()
@@ -29,10 +31,15 @@ def main():
             break
 
     # Release handle to the webcam
-    video_capture.release()
+    video_capture_0.release()
+    video_capture_1.release()
     cv2.destroyAllWindows()
  
+frames_unknown_in = 0
+
 def process(conn, known_face_names, known_face_encodings, video_capture, setInOffice, identifier):
+    global frames_unknown_in
+
     # Initialize some variables
     face_locations = []
     face_encodings = []
@@ -41,6 +48,9 @@ def process(conn, known_face_names, known_face_encodings, video_capture, setInOf
 
     # Grab a single frame of video
     ret, frame = video_capture.read()
+
+    if frame is None:
+        return
 
     # Resize frame of video to 1/4 size for faster face recognition processing
     small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
@@ -65,6 +75,13 @@ def process(conn, known_face_names, known_face_encodings, video_capture, setInOf
                 first_match_index = matches.index(True)
                 name = known_face_names[first_match_index]
                 markInOffice(conn, name, setInOffice)
+            else:
+            	frames_unknown_in = frames_unknown_in + 1
+
+            if frames_unknown_in > 30:
+                say("An unknown person is in the office")
+                # TODO trigger slack web hook
+                frames_unknown_in = 0
 
             face_names.append(name)
 
@@ -86,12 +103,96 @@ def process(conn, known_face_names, known_face_encodings, video_capture, setInOf
         font = cv2.FONT_HERSHEY_DUPLEX
         cv2.putText(frame, name, (left + 6, bottom - 6), font, 1.0, (255, 255, 255), 1)
 
+    # Write some Text
+
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    bottomLeftCornerOfText = (30, 70)
+    fontScale = 2
+    fontColor = (0, 0, 255)
+    lineType = 2
+
+    cv2.putText(frame, identifier,
+                bottomLeftCornerOfText,
+                font,
+                fontScale,
+                fontColor,
+                4,
+                lineType)
+
     # Display the resulting image
     cv2.imshow('Video'+identifier, frame)
 
+voices = [
+    'Moira',
+    'Alex',
+    'Samantha'
+]
+
+def say(message):
+    subprocess.Popen(["say", message, "-v", random.choice(voices)])
+
+def greet(name):
+   global nick_greetings
+
+   greetings = [
+       'Hello',
+       'Bonjour',
+       'Greetings',
+       'What about yee',
+       'Good day',
+       'I am heartily glad to see you',
+       'A new face? Why, no, it is'
+   ]
+
+   phrase = random.choice(greetings)
+
+   if name == "Nick Mifsud":
+        phrase = random.choice(nick_greetings)
+
+   say(phrase + ' ' + name)
+
+nick_dismissals = [
+    'Goodbye and remember your lego',
+    'One at the National?',
+    'Lost child in aisle 6, answers to the name of'
+]
+
+nick_greetings = [
+    'Good-day, there is a lego delivery for you',
+    'Did you go home last night at all?',
+    '10:45 AM? I will update the records'
+]
+
+def dismiss(name):
+    global nick_dismissals
+
+    dismissals = [
+        'Goodbye',
+        'See you next Tuesday',
+        'Wee half day?',
+        'Good ridance',
+        'It pleases me greatly to see the departing rear end of'
+    ]
+
+    phrase = random.choice(dismissals)
+
+    if name == "Nick Mifsud":
+        phrase = random.choice(nick_dismissals)
+
+    say(phrase + ' ' + name)
+
 def markInOffice(conn, name, inOffice):
-    print('{0} {1} in the office'.format(name, 'is now' if inOffice else 'is no longer'))
-    conn.execute('UPDATE employees SET inOffice = ? where name = ?', (inOffice, name))
+    cur = conn.cursor()
+    cur.execute('UPDATE employees SET inOffice = ? where name = ? and inOffice = ?', (inOffice, name, not inOffice))
+
+    if cur.rowcount > 0:
+        if inOffice:
+            greet(name)
+        else:
+            dismiss(name)
+    
+        print(name + " is now " + ("" if inOffice else "not") + " in the office")
+
     conn.commit()
   
 

@@ -22,7 +22,7 @@ def list():
     con = sql.connect("employees.db")
 
     cur = con.cursor()
-    cur.execute("SELECT * FROM employees")
+    cur.execute("SELECT * FROM employees WHERE inOffice = 1")
     data = cur.fetchall()
 
     con.commit()

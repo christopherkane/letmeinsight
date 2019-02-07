@@ -105,8 +105,6 @@ const lastNChunks = (n) => {
 app.get('/', async (req, res) => {
   const rewindChunkFiles = lastNChunks(10);
 
-  console.log(rewindChunkFiles);
-
   res.header('Content-Type', 'video/webm');
 
   const allExist = rewindChunkFiles.every((file) => fs.existsSync(file));
@@ -134,6 +132,39 @@ app.get('/snapshot', (req, res) => {
 
   process.stdout.on('data', (data) => res.write(data));
   process.on('exit', () => res.end());
+});
+
+app.get('/alert', async (req, res) => {
+  res.send(200);
+
+  setTimeout(() => {
+
+      const request = require('request');
+      const fileUrl = 'https://slack.com/api/files.upload?token=xoxb-543469945539-542883263136-9njReb0NZpFWFpNbeJC0elAE&channels=general&filename=Evidence.webm&pretty=1';
+
+      const rewindChunkFiles = lastNChunks(10);
+      const outputFile = 'out.mp4';
+
+      if (fs.existsSync(outputFile)) {
+        fs.unlinkSync(outputFile);
+      }
+
+      const process = childProcess.spawn('ffmpeg', [
+        '-i', `concat:${rewindChunkFiles.join('|')}`,
+        '-y', outputFile
+      ], {
+        stdio: 'inherit'
+      });
+
+      process.on('exit', () => {
+          const r = request.post(fileUrl, (err, response, body) => {
+            console.log(body);
+          });
+
+          const form = r.form();
+          form.append('file', fs.createReadStream(outputFile));
+      });
+  }, 5000);
 });
 
 app.listen(9001);

@@ -4,6 +4,7 @@ import face_recognition
 import cv2
 import sqlite3
 import subprocess
+import urllib3
 
 def main():
 
@@ -36,9 +37,10 @@ def main():
     cv2.destroyAllWindows()
  
 frames_unknown_in = 0
+http = urllib3.PoolManager()
 
 def process(conn, known_face_names, known_face_encodings, video_capture, setInOffice, identifier):
-    global frames_unknown_in
+    global frames_unknown_in, http
 
     # Initialize some variables
     face_locations = []
@@ -76,11 +78,16 @@ def process(conn, known_face_names, known_face_encodings, video_capture, setInOf
                 name = known_face_names[first_match_index]
                 markInOffice(conn, name, setInOffice)
             else:
-            	frames_unknown_in = frames_unknown_in + 1
+                frames_unknown_in = frames_unknown_in + 1
 
-            if frames_unknown_in > 30:
+            if len(face_encoding) == 0:
+                frames_unknown_in = 0
+
+            print(frames_unknown_in)
+
+            if frames_unknown_in > 10:
+                http.request('GET', 'http://localhost:9001/alert')
                 say("An unknown person is in the office")
-                # TODO trigger slack web hook
                 frames_unknown_in = 0
 
             face_names.append(name)
@@ -129,7 +136,7 @@ voices = [
 ]
 
 def say(message):
-    subprocess.Popen(["say", message, "-v", random.choice(voices)])
+    subprocess.call(["say", message, "-v", random.choice(voices)])
 
 def greet(name):
    global nick_greetings
